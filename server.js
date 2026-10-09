@@ -262,7 +262,18 @@ async function constructServer(moduleDefs) {
   /**
    * Cache
    */
-  app.use(cache('2 minutes', (_, res) => res.statusCode === 200))
+  // 扫码状态与用户会话不得进入共享缓存；公开音乐数据维持原有缓存行为。
+  app.use(
+    cache(
+      '2 minutes',
+      (req, res) =>
+        res.statusCode === 200 &&
+        !/^\/(?:login|logout|register|user)(?:\/|$)/.test(req.path) &&
+        !req.query?.cookie &&
+        !req.body?.cookie &&
+        Object.keys(req.cookies || {}).length === 0,
+    ),
+  )
 
   /**
    * Special Routers
